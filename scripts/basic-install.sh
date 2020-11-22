@@ -166,13 +166,13 @@ elif [ "$pkg" != "n" ]; then
 
 	sleep 1
 
-	apt-get install apache2 php
-        apt-get install php
+	yum install apache2
+        yum install php
 
 fi;
 
 # Config File
-conf="/etc/apache2/sites-available/$domain.conf"
+conf="/etc/httpd/conf.d/$domain.conf"
 touch "$conf"
 
 # Document Root
@@ -268,8 +268,8 @@ fi;
 
 chmod -R 755 /var/www
 
-a2conf="/etc/apache2/apache2.conf"
-mv "$a2conf" "/etc/apache2/default-apache2.conf.txt"
+a2conf="/etc/httpd/conf/httpd. conf"
+mv "$a2conf" "/etc/httpd/conf/httpd. conf.txt"
 touch "$a2conf"
 
 echo '''#
