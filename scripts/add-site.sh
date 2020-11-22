@@ -140,7 +140,7 @@ if [ "$ssl_dir" = "n" ] || [ "$continue" = "no" ]; then
 fi;
 
 # Config File
-conf="/etc/apache2/sites-available/$domain.conf"
+conf="/etc/httpd/conf.d/$domain.conf"
 touch "$conf"
 
 # Document Root
