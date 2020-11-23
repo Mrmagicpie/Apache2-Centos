@@ -212,6 +212,8 @@ echo "|---------------------------------------------------------|"
 sleep 1
 
 yum install apache2
+systemctl start apache2
+systemctl enable apache2
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
@@ -367,5 +369,151 @@ echo """#
 a2enmod ssl
 a2enmod rewrite
 a2ensite $domain
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+# .htaccess files
+#
+a2conf="/etc/httpd/conf/httpd.conf"
 
+echo "|---------------------------------------------------------|"
+echo '|      Would you like Apache Access Files(.htaccess)?     |'
+echo "|                                                         |"
+echo '|        Please say "y" for yes, and "n" to stop          |'
+echo "|---------------------------------------------------------|"
 
+read htaccess
+
+if [ "$htaccess" = "n" ] || [ "$htaccess" = "no" ]; then
+
+	echo "|---------------------------------------------------------|"
+	echo "| We will not configure Apache Access Files(.htaccess)!   |"
+	echo "|                                                         |"
+	echo "| The Apache2 Installation is now complete. If this didn't|"
+	echo "|            work for you, please let us know!!           |"
+	echo "|                                                         |"
+	echo "|          https://github.com/Mrmagicpie/Apache2          |"
+	echo "|---------------------------------------------------------|"
+
+  if [ "$php" = "y" ]; then
+
+    echo "DirectoryIndex index.php index.html index.htm index.xml" >> "$a2conf"
+
+  fi
+
+	sleep 1
+
+	exit
+
+fi
+
+mv "$a2conf" "/etc/httpd/conf/httpd.conf.txt"
+touch "$a2conf"
+
+echo '''#
+#
+# Main Apache2 Configuration
+# https://Apache.Mrmagicpie.xyz
+#
+#
+
+# Timeout
+
+Timeout 300
+KeepAlive On
+MaxKeepAliveRequests 100
+KeepAliveTimeout 5
+
+# Logs
+
+ErrorLog ${APACHE_LOG_DIR}/error.log
+LogLevel warn
+LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
+LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
+LogFormat "%h %l %u %t \"%r\" %>s %O" common
+LogFormat "%{Referer}i -> %U" referer
+
+# Mod/Site Includes
+
+IncludeOptional mods-enabled/*.load
+IncludeOptional mods-enabled/*.conf
+IncludeOptional conf-enabled/*.conf
+IncludeOptional sites-enabled/*.conf
+Include ports.conf
+
+# Directory Access
+
+<Directory /var/www/>
+	Options Indexes FollowSymLinks
+	AllowOverride All
+	Require all granted
+</Directory>
+<Directory /usr/share>
+	AllowOverride None
+	Require all granted
+</Directory>
+<Directory />
+	Options FollowSymLinks
+	AllowOverride None
+	Require all denied
+</Directory>
+<FilesMatch "^\.ht">
+	Require all denied
+</FilesMatch>
+
+# Other Settings
+
+User ${APACHE_RUN_USER}
+Group ${APACHE_RUN_GROUP}
+HostnameLookups Off
+AccessFileName .htaccess
+DefaultRuntimeDir ${APACHE_RUN_DIR}
+PidFile ${APACHE_PID_FILE}
+  ''' >> $a2conf
+
+if [ "$php" = "n" ]; then
+
+  echo '''
+#                       Mrmagicpie (c) 2020
+#
+#                       Apache.Mrmagicpie.xyz
+#
+#                   GitHub.com/Mrmagicpie/Apache2''' >> "$a2conf"
+
+else; then
+
+  echo '''DirectoryIndex index.php index.html index.htm index.xml
+
+#                       Mrmagicpie (c) 2020
+#
+#                       Apache.Mrmagicpie.xyz
+#
+#                   GitHub.com/Mrmagicpie/Apache2''' >> "$a2conf"
+
+fi
+
+systemctl restart apache2
+
+echo """
+|---------------------------------------------------------|
+|The Apache2 Configuration is now complete! You may have  |
+|to wait for DNS to update before using your site.        |
+|                                                         |
+|Upload your Website files to:                            |
+|       /var/www/$domain/website                 |
+|To begin using Apache2.                                  |
+|                                                         |
+| Report issues or contribute here:                       |
+|     https://github.com/Mrmagicpie/Apache2-Centos        |
+|---------------------------------------------------------|
+"""
+
+sleep 3
+
+exit
+
+#                       Mrmagicpie (c) 2020
+#
+#                       Apache.Mrmagicpie.xyz
+#
+#                GitHub.com/Mrmagicpie/Apache2-Centos
