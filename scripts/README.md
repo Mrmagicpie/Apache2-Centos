@@ -1,6 +1,8 @@
 <link rel="stylesheet" href="https://apache.mrmagicpie.xyz/custom-assets/style.css">
 <h1 align="center">Apache2 Scripts!</h1>
 
-<h2 align="center">WARNING!</h2>
 
-This project is not yet public. These scripts are **only** for Ubuntu at the moment. They wiil not work!
+These scripts have not been tested and are not garunteed to work! Please use with caution.
+- Mrmagicpie
+
+[Install](https://centos-apache.mrmagicpie.xyz/scripts/install.sh)
