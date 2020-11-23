@@ -3,7 +3,7 @@
 
 **The Centos site is still under development, and is essentially the Ubuntu site!**
 
-<h1>Disclaimer: I haven't tested any of these scripts!, I do not use Centos reqularily. Please help!</h1>
+<h1>Disclaimer: I haven't tested any of these scripts!, I do not use Centos reqglarily. Please help!</h1>
 
 <!--
 <h2>FAQ</h2>
