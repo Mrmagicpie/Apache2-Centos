@@ -45,10 +45,29 @@ fi
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
-# Starting the install
+# Checking if Apache2 is installed
+#
+if ! [ -x "$(command -v apache2)" ]; then
+
+    echo "|---------------------------------------------------------|"
+    echo '|             Error: Apache2 is not installed.            |'
+    echo "|                                                         |"
+    echo "|      You need Apache2 to add a VHost! Install here:     |"
+    echo "|  https://centos-apache.mrmagicpie.xyz/script/install.sh |"
+    echo "|---------------------------------------------------------|"
+
+    sleep 3
+
+    exit
+
+fi
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+# Starting the setup
 #
 echo "|---------------------------------------------------------|"
-echo "|Welcome to the Apache2 Basic Install. Please make sure   |"
+echo "|Welcome to the Apache2 Domain addition. Please make sure |"
 echo "|you have a fully qualified domain name, and SSL to match.|"
 echo "|   Your SSL must be in $dir, in .pem, and .key files.    |"
 echo "|                                                         |"
@@ -67,7 +86,7 @@ read domain
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
-# Asking if they want to install with their domain
+# Asking if they want to setup with their domain
 #
 echo "|---------------------------------------------------------|"
 echo "|     Configure Apache2 with the domain: $domain?     |"
@@ -177,41 +196,6 @@ if [ "$ssl_dir" = "n" ] || [ "$ssl_dir" = "no" ]; then
   exit
 
 fi
-#
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#
-# Apache install
-#
-echo "|---------------------------------------------------------|"
-echo "|                     Install Apache2?                    |"
-echo "|                                                         | "
-echo '|           Please say "y" for yes, "n" for no.           |'
-echo "|---------------------------------------------------------|"
-echo " "
-
-read apache
-
-if [ "$apache" = "n" ] || [ "$apache" = "no" ]; then
-
-  echo "|---------------------------------------------------------|"
-	echo "|              Exiting Apache2 configuration.             |"
-  echo "|                                                         |"
-  echo "|        You need Apache2 to run an Apache2 server        |"
-	echo "|---------------------------------------------------------|"
-
-	sleep 3
-
-  exit
-
-fi
-
-echo "|---------------------------------------------------------|"
-echo "|                  Installing Apache2                     |"
-echo "|---------------------------------------------------------|"
-
-sleep 1
-
-yum install apache2
 systemctl start apache2
 systemctl enable apache2
 #
@@ -219,79 +203,42 @@ systemctl enable apache2
 #
 # PHP install
 #
-echo "|---------------------------------------------------------|"
-echo "|                       Install PHP?                      |"
-echo "|            We recommend having PHP Installed!           |"
-echo "|                   https://www.php.net/                  |"
-echo "|                                                         |"
-echo '|           Please say "y" for yes, "n" for no.           |'
-echo "|---------------------------------------------------------|"
-echo " "
-
-read phpp
-
-if [ "$phpp" = "n" ] || [ "$phpp" = "no" ]; then
+if ! [ -x $(yum list installed|grep 'php') ]; then
 
   echo "|---------------------------------------------------------|"
-	echo "|                 We will not install PHP                 |"
-	echo "|---------------------------------------------------------|"
-
-	php="n"
-
-	sleep 1
-
-else; then
-
+  echo "|                       Install PHP?                      |"
+  echo "|            We recommend having PHP Installed!           |"
+  echo "|                   https://www.php.net/                  |"
+  echo "|                                                         |"
+  echo '|           Please say "y" for yes, "n" for no.           |'
   echo "|---------------------------------------------------------|"
-  echo "|                     Installing PHP                      |"
-  echo "|---------------------------------------------------------|"
+  echo " "
 
-  php="y"
+  read phpp
 
-  sleep 1
+  if [ "$phpp" = "n" ] || [ "$phpp" = "no" ]; then
 
-  yum install php
+    echo "|---------------------------------------------------------|"
+    echo "|                 We will not install PHP                 |"
+    echo "|---------------------------------------------------------|"
 
-fi
-#
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#
-# Firewall setup
-#
-echo "|---------------------------------------------------------|"
-echo "|                    Setup the Firewall?                  |"
-echo "|     If you do not use this, you will have to manually   |"
-echo "|         the firewall to allow HTTP/HTTPS traffic        |"
-echo "|                                                         |"
-echo '|           Please say "y" for yes, "n" for no.           |'
-echo "|---------------------------------------------------------|"
-echo " "
+    php="n"
 
-read firewall
+    sleep 1
 
-if [ "$firewall" = "n" ] || [ "$firewall" = "no" ]; then
+  else; then
 
-  echo "|---------------------------------------------------------|"
-	echo "|              We will not setup the Firewall             |"
-	echo "|---------------------------------------------------------|"
+    echo "|---------------------------------------------------------|"
+    echo "|                     Installing PHP                      |"
+    echo "|---------------------------------------------------------|"
 
-	sleep 1
+    php="y"
 
-else; then
+    sleep 1
 
-  echo "|---------------------------------------------------------|"
-  echo "|                 Setting up the Firewall                 |"
-  echo "|---------------------------------------------------------|"
+    yum install php
 
-  sleep 1
-
-  yum install firewalld
-  systemctl start firewalld
-  systemctl enable firewalld
-
-  firewall-cmd --zone=public --add-service=http --permanent
-  firewall-cmd --zone=public --add-service=https --permanent
-  firewall-cmd --reload
+  fi
 
 fi
 #
@@ -366,131 +313,7 @@ echo """#
 """ >> "$domain_conf"
 
 # Apache Configuration
-a2enmod ssl
-a2enmod rewrite
 a2ensite $domain
-#
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#
-# .htaccess files
-#
-a2conf="/etc/httpd/conf/httpd.conf"
-
-echo "|---------------------------------------------------------|"
-echo '|      Would you like Apache Access Files(.htaccess)?     |'
-echo "|                                                         |"
-echo '|        Please say "y" for yes, and "n" to stop          |'
-echo "|---------------------------------------------------------|"
-
-read htaccess
-
-if [ "$htaccess" = "n" ] || [ "$htaccess" = "no" ]; then
-
-	echo "|---------------------------------------------------------|"
-	echo "| We will not configure Apache Access Files(.htaccess)!   |"
-	echo "|                                                         |"
-	echo "| The Apache2 Installation is now complete. If this didn't|"
-	echo "|            work for you, please let us know!!           |"
-	echo "|                                                         |"
-	echo "|          https://github.com/Mrmagicpie/Apache2          |"
-	echo "|---------------------------------------------------------|"
-
-  if [ "$php" = "y" ]; then
-
-    echo "DirectoryIndex index.php index.html index.htm index.xml" >> "$a2conf"
-
-  fi
-
-	sleep 1
-
-	exit
-
-fi
-
-mv "$a2conf" "/etc/httpd/conf/httpd.conf.txt"
-touch "$a2conf"
-
-echo '''#
-#
-# Main Apache2 Configuration
-# https://Apache.Mrmagicpie.xyz
-#
-#
-
-# Timeout
-
-Timeout 300
-KeepAlive On
-MaxKeepAliveRequests 100
-KeepAliveTimeout 5
-
-# Logs
-
-ErrorLog ${APACHE_LOG_DIR}/error.log
-LogLevel warn
-LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
-LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
-LogFormat "%h %l %u %t \"%r\" %>s %O" common
-LogFormat "%{Referer}i -> %U" referer
-
-# Mod/Site Includes
-
-IncludeOptional mods-enabled/*.load
-IncludeOptional mods-enabled/*.conf
-IncludeOptional conf-enabled/*.conf
-IncludeOptional sites-enabled/*.conf
-Include ports.conf
-
-# Directory Access
-
-<Directory /var/www/>
-	Options Indexes FollowSymLinks
-	AllowOverride All
-	Require all granted
-</Directory>
-<Directory /usr/share>
-	AllowOverride None
-	Require all granted
-</Directory>
-<Directory />
-	Options FollowSymLinks
-	AllowOverride None
-	Require all denied
-</Directory>
-<FilesMatch "^\.ht">
-	Require all denied
-</FilesMatch>
-
-# Other Settings
-
-User ${APACHE_RUN_USER}
-Group ${APACHE_RUN_GROUP}
-HostnameLookups Off
-AccessFileName .htaccess
-DefaultRuntimeDir ${APACHE_RUN_DIR}
-PidFile ${APACHE_PID_FILE}
-  ''' >> $a2conf
-
-if [ "$php" = "n" ]; then
-
-  echo '''
-#                       Mrmagicpie (c) 2020
-#
-#                       Apache.Mrmagicpie.xyz
-#
-#                   GitHub.com/Mrmagicpie/Apache2''' >> "$a2conf"
-
-else; then
-
-  echo '''DirectoryIndex index.php index.html index.htm index.xml
-
-#                       Mrmagicpie (c) 2020
-#
-#                       Apache.Mrmagicpie.xyz
-#
-#                   GitHub.com/Mrmagicpie/Apache2''' >> "$a2conf"
-
-fi
 
 systemctl restart apache2
 
